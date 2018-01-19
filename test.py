@@ -1,10 +1,8 @@
-def data(n, m):
-    n = 10
-    m = 20
+from scapy.all import *
+from scapy.layers.inet import TCP, IP, UDP
+evenpcap = sniff(offline="amazon_1.pcap")
+packettime = 0
+
+print(evenpcap[0][Ether].show)
 
 
-if __name__ == '__main__':
-    n = 1
-    m = 1
-    data(n, m)
-    print(n, m)
