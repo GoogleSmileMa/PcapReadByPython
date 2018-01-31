@@ -4,13 +4,13 @@ from scapy.layers.inet import TCP, IP, UDP
 
 def sniff_data(n, evenpcap, oddpcap):
     if n % 2 == 0:
-        evenpcap = sniff(offline="206_"+str(n)+".pcap")
+        evenpcap = sniff(offline="Comnet/alldata_"+str(n)+".pcap")
         starttime1 = oddpcap[0].time * 1000000
         endtime1 = oddpcap[-1].time * 1000000
         starttime2 = evenpcap[0].time * 1000000
         endtime2 = evenpcap[-1].time * 1000000
     else:
-        oddpcap = sniff(offline="206_"+str(n)+".pcap")
+        oddpcap = sniff(offline="Comnet/alldata_"+str(n)+".pcap")
         starttime1 = evenpcap[0].time * 1000000
         endtime1 = evenpcap[-1].time * 1000000
         starttime2 = oddpcap[0].time * 1000000
@@ -19,14 +19,14 @@ def sniff_data(n, evenpcap, oddpcap):
 
 
 if __name__ == '__main__':
-    evenpcap = sniff(offline="206_0.pcap")
-    oddpcap = sniff(offline="206_1.pcap")
+    evenpcap = sniff(offline="Comnet/alldata_0.pcap")
+    oddpcap = sniff(offline="Comnet/alldata_1.pcap")
     starttime1 = evenpcap[0].time * 1000000
     endtime1 = evenpcap[-1].time * 1000000
     starttime2 = oddpcap[0].time * 1000000
     endtime2 = oddpcap[-1].time * 1000000
     evenfirst = True
-    appname = 'wikipedia'
+    appname = 'rdp'
     print(str(1) + ":" + str(starttime1) + "," + str(endtime1) + "," + str(starttime2) + "," + str(endtime2))
     w = open(appname+'.txt', 'w')
     w.write(str(1) + ":" + str(starttime1) + "," + str(endtime1) + "," + str(starttime2) + "," + str(endtime2))
@@ -35,7 +35,8 @@ if __name__ == '__main__':
     rowNum = 0
     packettime = 0
     num = 1
-    with open('147.83.42.206.txt', 'r') as f:
+    allpackets = []
+    with open('packets_default.info', 'r') as f:
         for line in f.readlines():
             if appname in line:
                 rowNum = rowNum + 1
@@ -43,17 +44,17 @@ if __name__ == '__main__':
                 flowendtime = int(line.split('#')[2])
                 localport = int(line.split('#')[5])
                 remoteport = int(line.split('#')[6])
-                while flowstarttime > endtime1 and num < 26:  # 需要更新奇偶包内容
+                while flowstarttime > endtime1 and num < 643:  # 需要更新奇偶包内容
                     num = num + 1
                     evenfirst = (num % 2 != 0)
                     if evenfirst:  # 偶数pcap包在先
-                        oddpcap = sniff(offline="206_" + str(num) + ".pcap")
+                        oddpcap = sniff(offline="Comnet/alldata_" + str(num) + ".pcap")
                         starttime1 = evenpcap[0].time * 1000000
                         endtime1 = evenpcap[-1].time * 1000000
                         starttime2 = oddpcap[0].time * 1000000
                         endtime2 = oddpcap[-1].time * 1000000
                     else:
-                        evenpcap = sniff(offline="206_" + str(num) + ".pcap")
+                        evenpcap = sniff(offline="Comnet/alldata_" + str(num) + ".pcap")
                         starttime1 = oddpcap[0].time * 1000000
                         endtime1 = oddpcap[-1].time * 1000000
                         starttime2 = evenpcap[0].time * 1000000
@@ -68,9 +69,9 @@ if __name__ == '__main__':
                         dport = packet[Ether].dport
                         if flowstarttime <= packettime <= flowendtime and ((sport == localport and dport == remoteport) or (sport == remoteport and dport == localport)):
                             count = count + 1
+                            allpackets.append(packet)
                             # w.write(str(count)+'\n')
                         elif packettime > flowendtime:
-                            lastcount = count
                             break
                     if packettime < flowendtime:
                         for packet in oddpcap:
@@ -79,9 +80,9 @@ if __name__ == '__main__':
                             dport = packet[Ether].dport
                             if flowstarttime <= packettime <= flowendtime and ((sport == localport and dport == remoteport) or (sport == remoteport and dport == localport)):
                                 count = count + 1
+                                allpackets.append(packet)
                                 # w.write(str(count)+'\n')
                             elif packettime > flowendtime:
-                                lastcount = count
                                 break
                 else:
                     for packet in oddpcap:
@@ -90,9 +91,9 @@ if __name__ == '__main__':
                         dport = packet[Ether].dport
                         if flowstarttime <= packettime <= flowendtime and ((sport == localport and dport == remoteport) or (sport == remoteport and dport == localport)):
                             count = count + 1
+                            allpackets.append(packet)
                             # w.write(str(count)+'\n')
                         elif packettime > flowendtime:
-                            lastcount = count
                             break
                     if packettime < flowendtime:
                         for packet in evenpcap:
@@ -101,14 +102,16 @@ if __name__ == '__main__':
                             dport = packet[Ether].dport
                             if flowstarttime <= packettime <= flowendtime and ((sport == localport and dport == remoteport) or (sport == remoteport and dport == localport)):
                                 count = count + 1
+                                allpackets.append(packet)
                                 # w.write(str(count)+'\n')
                             elif packettime > flowendtime:
-                                lastcount = count
                                 break
                 print(rowNum, count, count-lastcount)
-                w.write(str(rowNum)+' '+str(count)+' '+str(count - lastcount)+'\n')
+                w.write(str(rowNum)+' '+line.split('#')[0]+' '+str(count)+' '+str(count - lastcount)+'\n')
+                lastcount = count
             else:
                 continue
+    wrpcap(appname, allpackets)
     w.close()
 
 
