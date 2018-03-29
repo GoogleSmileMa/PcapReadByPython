@@ -30,11 +30,11 @@ if __name__ == '__main__':
     test_images = []
     flows = {}
     add_flow(flows, num)
-    flows['flow1'] = [dpkt[0][Ether].src, dpkt[0][Ether].dst, dpkt[0][Ether].sport, dpkt[0][Ether].dport, dpkt[0][Ether].proto]
+    flows['flow1'] = [dpkt[0][IP].src, dpkt[0][IP].dst, dpkt[0][Ether].sport, dpkt[0][Ether].dport, dpkt[0][Ether].proto]
     for packet in dpkt:
         IsGet = False
-        srcIP = packet[Ether].src
-        dstIP = packet[Ether].dst
+        srcIP = packet[IP].src
+        dstIP = packet[IP].dst
         srcPort = packet[Ether].sport
         dstPort = packet[Ether].dport
         protocol = packet[Ether].proto
